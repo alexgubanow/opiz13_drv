@@ -1,0 +1,22 @@
+---
+BasedOnStyle: Microsoft
+AlignEscapedNewlines: Left
+AllowShortFunctionsOnASingleLine: All
+AlwaysBreakAfterReturnType: None
+AlwaysBreakTemplateDeclarations: 'Yes'
+ColumnLimit: '125'
+IndentCaseLabels: 'true'
+IndentPPDirectives: BeforeHash
+IndentWidth: '2'
+Language: Cpp
+MaxEmptyLinesToKeep: '1'
+NamespaceIndentation: All
+PenaltyBreakAssignment: '50'
+SortUsingDeclarations: 'true'
+SpaceBeforeCtorInitializerColon: 'false'
+SpaceBeforeInheritanceColon: 'false'
+SpacesInAngles: 'true'
+TabWidth: '2'
+UseTab: Never
+
+...
