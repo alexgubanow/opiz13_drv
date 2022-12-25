@@ -1,6 +1,5 @@
-// #include "opiz13_drv.h"
 #include "opiz13_private.h"
-#include <asm/io.h>
+#include "gpio.h"
 
 /*first of the requested range of minor numbers*/
 #define FIRST_MINOR 0
@@ -10,6 +9,20 @@ MODULE_LICENSE("Dual MIT/GPL");
 MODULE_AUTHOR("Oleksandr Hubanov <alex@0x0h.com>");
 MODULE_DESCRIPTION("OpiZ13 faceboard Driver");
 
+/*Global variable of device*/
+static dev_t dev;
+static struct cdev c_dev;
+static struct class *cl;
+
+/*default methods to handle opening and closing device*/
+static int _drv_open(struct inode *i, struct file *f);
+static int _drv_close(struct inode *i, struct file *f);
+/*handle of query to driver*/
+static long _drv_ioctl(struct file *f, unsigned int cmd, unsigned long arg);
+
+/*declaring default handles of driver*/
+static struct file_operations _drv_fops = {
+    .owner = THIS_MODULE, .open = _drv_open, .release = _drv_close, .unlocked_ioctl = _drv_ioctl};
 
 static int _drv_open(struct inode *i, struct file *f) { return 0; }
 static int _drv_close(struct inode *i, struct file *f) { return 0; }
@@ -39,8 +52,8 @@ int copyTo(unsigned char *answer, unsigned long addr)
 static long _drv_ioctl(struct file *f, unsigned int cmd, unsigned long arg)
 {
   // variables to store possible variant of request
-  unsigned char rq;
-  int rq_idx;
+  //unsigned char rq;
+  //int rq_idx;
   int err = 0;
   printk(KERN_INFO "opiz13: _drv_ioctl");
 
@@ -55,10 +68,10 @@ static int __init _drv_ioctl_init(void)
 
   if ((ret = alloc_chrdev_region(&dev, FIRST_MINOR, MINOR_CNT, "_drv_ioctl")) < 0)
   {
-    printk(KERN_DEBUG "opiz13: Fail while alloc region for\n");
+    printk(KERN_DEBUG "opiz13: Fail while alloc region\n");
     return ret;
   }
-  printk(KERN_DEBUG "opiz13: Allocated region for\n");
+  printk(KERN_DEBUG "opiz13: Allocated region\n");
 
   cdev_init(&c_dev, &_drv_fops);
 
@@ -71,12 +84,12 @@ static int __init _drv_ioctl_init(void)
 
   if (IS_ERR(cl = class_create(THIS_MODULE, "char")))
   {
-    printk(KERN_ERR "opiz13: Fail while create class for\n");
+    printk(KERN_ERR "opiz13: Fail while create class\n");
     cdev_del(&c_dev);
     unregister_chrdev_region(dev, MINOR_CNT);
     return PTR_ERR(cl);
   }
-  printk(KERN_DEBUG "opiz13: Created class for\n");
+  printk(KERN_DEBUG "opiz13: Created class\n");
   if (IS_ERR(dev_ret = device_create(cl, NULL, dev, NULL, "opiz13")))
   {
     printk(KERN_ERR "opiz13: Failed to create device\n");
@@ -85,16 +98,8 @@ static int __init _drv_ioctl_init(void)
     unregister_chrdev_region(dev, MINOR_CNT);
     return PTR_ERR(dev_ret);
   }
-  gpio_mapped_addr = ioremap(OPI_GPIO_BASE, OPI_BLOCK_SIZE);
-  if (gpio_mapped_addr <= 0)
-  {
-    printk(KERN_ERR "opiz13: ioremap (GPIO) failed\n");
-    class_destroy(cl);
-    cdev_del(&c_dev);
-    unregister_chrdev_region(dev, MINOR_CNT);
-    return PTR_ERR(gpio_mapped_addr);
-  }
-
+  pinMode(_3V3EN, OUTPUT);
+  gpio_set_value(_3V3EN, 1);
   printk(KERN_INFO "opiz13: Initialization finished\n");
 
   return 0;
@@ -102,11 +107,12 @@ static int __init _drv_ioctl_init(void)
 /*exit method of driver*/
 static void __exit _drv_ioctl_exit(void)
 {
+  gpio_set_value(_3V3EN, 0);
+	gpio_free(_3V3EN);
   device_destroy(cl, dev);
   class_destroy(cl);
   cdev_del(&c_dev);
   unregister_chrdev_region(dev, MINOR_CNT);
-  iounmap(gpio_mapped_addr);
   printk(KERN_INFO "opiz13: Unloading finished, bye bye\n");
 }
 /*declaring init and exit*/
