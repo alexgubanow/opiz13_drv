@@ -13,7 +13,7 @@ SRCS_SYMLINKS += $(wildcard *.h)
 SRCS_SYMLINKS += Makefile
 # #obj-m := $(addprefix $(OBJ_DIR)/, $(addsuffix .o, $(basename $(SRCS))))
 obj-m += opiz13.o
-opiz13-y := opiz13_main.o gpio.o
+opiz13-y := opiz13_main.o gpio.o pwr.o
 
 default: module
 

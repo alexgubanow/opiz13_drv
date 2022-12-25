@@ -83,5 +83,6 @@
 
 /* pinMode:Sets the mode of a pin to be input, output or PWM output */
 void pinMode(int pin, int mode);
+void releasePins(void);
 
 #endif

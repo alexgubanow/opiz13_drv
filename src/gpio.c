@@ -1,17 +1,48 @@
 #include "gpio.h"
 #include "opiz13_private.h"
 
+#include <linux/list.h>
+#include <linux/slab.h>
+
+/*Linked List Node*/
+struct pin_list_entry
+{
+  struct list_head list; // linux kernel list implementation
+  int pin;
+};
+LIST_HEAD(pin_list);
+
 void pinMode(int pin, int mode)
 {
-  if (gpio_is_valid(pin) == false)
+  struct pin_list_entry *requested_pin = NULL;
+  struct pin_list_entry *temp;
+  list_for_each_entry(temp, &pin_list, list)
   {
-    pr_err("gpio_is_valid fail\n");
-    return;
+    if (temp->pin == pin)
+    {
+      requested_pin = temp;
+      break;
+    }
   }
-  if (gpio_request(pin, NULL))
+  if (requested_pin == NULL)
   {
-    pr_err("gpio_request fail\n");
-    return;
+    if (gpio_is_valid(pin) == false)
+    {
+      pr_err("gpio_is_valid fail\n");
+      return;
+    }
+    if (gpio_request(pin, NULL))
+    {
+      pr_err("gpio_request fail\n");
+      return;
+    }
+    requested_pin = kmalloc(sizeof(struct pin_list_entry), GFP_KERNEL);
+    /*Assgin the data that is received*/
+    requested_pin->pin = pin;
+    /*Init the list within the struct*/
+    INIT_LIST_HEAD(&requested_pin->list);
+    /*Add Node to Linked List*/
+    list_add_tail(&requested_pin->list, &pin_list);
   }
   if (mode == INPUT)
   {
@@ -34,4 +65,16 @@ void pinMode(int pin, int mode)
   //   wiringPinMode = PWM_OUTPUT;
   //   return;
   // }
+}
+
+void releasePins(void)
+{
+  struct pin_list_entry *cursor, *temp;
+  list_for_each_entry(temp, &pin_list, list) { gpio_free(temp->pin); }
+  temp = NULL;
+  list_for_each_entry_safe(cursor, temp, &pin_list, list)
+  {
+    list_del(&cursor->list);
+    kfree(cursor);
+  }
 }

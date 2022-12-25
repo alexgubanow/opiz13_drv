@@ -1,4 +1,5 @@
 #include "opiz13_private.h"
+#include "pwr.h"
 #include "gpio.h"
 
 /*first of the requested range of minor numbers*/
@@ -98,8 +99,7 @@ static int __init _drv_ioctl_init(void)
     unregister_chrdev_region(dev, MINOR_CNT);
     return PTR_ERR(dev_ret);
   }
-  pinMode(_3V3EN, OUTPUT);
-  gpio_set_value(_3V3EN, 1);
+  switch_3V3(1);
   printk(KERN_INFO "opiz13: Initialization finished\n");
 
   return 0;
@@ -107,8 +107,8 @@ static int __init _drv_ioctl_init(void)
 /*exit method of driver*/
 static void __exit _drv_ioctl_exit(void)
 {
-  gpio_set_value(_3V3EN, 0);
-	gpio_free(_3V3EN);
+  switch_3V3(0);
+	releasePins();
   device_destroy(cl, dev);
   class_destroy(cl);
   cdev_del(&c_dev);
