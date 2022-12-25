@@ -1,5 +1,6 @@
-#include "opiz13_drv.h"
+// #include "opiz13_drv.h"
 #include "opiz13_private.h"
+#include <asm/io.h>
 
 /*first of the requested range of minor numbers*/
 #define FIRST_MINOR 0
@@ -9,7 +10,7 @@ MODULE_LICENSE("Dual MIT/GPL");
 MODULE_AUTHOR("Oleksandr Hubanov <alex@0x0h.com>");
 MODULE_DESCRIPTION("OpiZ13 faceboard Driver");
 
-/*default methods to handle opening and closing device*/
+
 static int _drv_open(struct inode *i, struct file *f) { return 0; }
 static int _drv_close(struct inode *i, struct file *f) { return 0; }
 
@@ -35,11 +36,7 @@ int copyTo(unsigned char *answer, unsigned long addr)
 }
 
 /*handle of query to driver*/
-#if (LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 35))
-static int _drv_ioctl(struct inode *i, struct file *f, unsigned int cmd, unsigned long arg)
-#else
 static long _drv_ioctl(struct file *f, unsigned int cmd, unsigned long arg)
-#endif
 {
   // variables to store possible variant of request
   unsigned char rq;
