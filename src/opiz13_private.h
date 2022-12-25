@@ -1,7 +1,6 @@
 #ifndef _opiz13_private
 #define _opiz13_private
 
-#include <asm/uaccess.h>
 #include <linux/cdev.h>
 #include <linux/device.h>
 #include <linux/errno.h>
@@ -35,6 +34,11 @@ static struct cdev c_dev;
 static struct class *cl;
 void __iomem *gpio_mapped_addr;
 
+/*default methods to handle opening and closing device*/
+static int _drv_open(struct inode *i, struct file *f);
+static int _drv_close(struct inode *i, struct file *f);
+/*handle of query to driver*/
+static long _drv_ioctl(struct file *f, unsigned int cmd, unsigned long arg);
 /*declaring default handles of driver*/
 static struct file_operations _drv_fops = {.owner = THIS_MODULE,
                                            .open = _drv_open,
