@@ -1,5 +1,6 @@
 #include "opiz13_private.h"
 #include "pwr.h"
+#include "buzzer.h"
 #include "gpio.h"
 
 /*first of the requested range of minor numbers*/
@@ -100,6 +101,7 @@ static int __init _drv_ioctl_init(void)
     return PTR_ERR(dev_ret);
   }
   switch_3V3(1);
+  softToneCreate(BUZZ1);
   printk(KERN_INFO "opiz13: Initialization finished\n");
 
   return 0;
@@ -108,6 +110,7 @@ static int __init _drv_ioctl_init(void)
 static void __exit _drv_ioctl_exit(void)
 {
   switch_3V3(0);
+  softToneStop(BUZZ1);
 	releasePins();
   device_destroy(cl, dev);
   class_destroy(cl);
